@@ -19,8 +19,8 @@ class SentimentAnalyzer {
         return withContext(Dispatchers.IO) {
             try {
                 val prompt = """
-                    Analyze the following text and classify the sentiment as Positive or Negative.
-                    Just respond with "Positive" or "Negative" only.
+                    Analyze the following text and classify the sentiment as Positive, Neutral, or Negative.
+                    Just respond with "Positive", "Neutral", or "Negative" only.
                     Text: "$text"
                 """.trimIndent()
 
@@ -51,10 +51,14 @@ class SentimentAnalyzer {
                     .getJSONObject(0)
                     .getString("text")
 
-                val positive = if (content.contains("Positive", ignoreCase = true)) 1f else 0f
-                val negative = if (content.contains("Negative", ignoreCase = true)) 1f else 0f
+                val sentimentResult = when {
+                    content.contains("Positive", ignoreCase = true) -> SentimentResult(positive = 1f, negative = 0f)
+                    content.contains("Negative", ignoreCase = true) -> SentimentResult(positive = 0f, negative = 1f)
+                    content.contains("Neutral", ignoreCase = true) -> SentimentResult(positive = 0.5f, negative = 0.5f)
+                    else -> SentimentResult(positive = 0.5f, negative = 0.5f)
+                }
 
-                SentimentResult(positive = positive, negative = negative)
+                sentimentResult
             } catch (e: Exception) {
                 e.printStackTrace()
                 SentimentResult(positive = 0.5f, negative = 0.5f)
